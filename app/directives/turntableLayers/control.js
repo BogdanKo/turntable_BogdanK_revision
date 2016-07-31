@@ -58,10 +58,10 @@ function addControlLayer(stage, baseGroup, layer, params) {
 
     var controlSmallPart = new Konva.Image({
 
-        x: 30.2,
-        y: 244,
-        width: 6,
-        height: 11,
+        x: 35.73,
+        y: 255,
+        width: 4.8,
+        height: 9,
 
         image: params.controlSmallPart,
         offset: {
@@ -147,72 +147,157 @@ control.addEventListener ('mousedown', function (){
 
     var controlUsed = false;
 
-    var pos = stage.getPointerPosition();
+
     var currentPos = {
-        x: pos.x - image.x(),
-        y: pos.y - image.y()
+        x: 0,
+        y: 0
     };
 
-    controlSmallPart.addEventListener('mousedown', function(){
-        var pos = stage.getPointerPosition();
-        currentPos = {
-            x: pos.x - image.x(),
-            y: pos.y - image.y()
-        };
-    controlUsed = true;
-  });
-
-    controlSmallPart.addEventListener('mouseup', function(){
-
-        controlUsed = false;
-    });
-
-    controlSmallPart.addEventListener('mousemove', function(){
-
-        if(controlUsed)
-        {
-            var pos = stage.getPointerPosition();
-            var localPos = {
-                x: pos.x - image.x(),
-                y: pos.y - image.y()
-            };
-        }
-    });
-
-
-/*
-          control.on('mousemove', function(evt) {
-          var controlled = true
-           mousePos = stage.getPointerPosition();
-              if(controlled) {
-                var x = mouseoPos.X - stage.GetX();
-                var y = mousePos.Y - stage.GetY();
-                var angle = Math.atan(y / x);
-
-
-               var rotation = x >= 0 ? angle : angle + Math.PI;
-               control.rotate(rotation - (control.getAngle() / 2));
-
-                    }
-                }, false);
-
-                     */
-    function controlStart() {
-        rollStarted = true;
-        animOne.start();
-        params.start();
+    function rotateControl(degrees) {
+        controlGroup.rotation(degrees);
+        layer.draw();
     }
 
-    function controlStop() {
-        rollStarted = false;
-        animTwo.start();
-        params.stop();
+    function lenBetweenPoints(first, next) {
+        return Math.sqrt(Math.pow(first.x - next.x, 2) + Math.pow(first.y - next.y, 2));
+    }
+
+    function calculateAngle(currentPoint) {
+
+        var center = {
+            x: controlGroup.attrs.x,
+            y: controlGroup.attrs.y
+        }
+
+        var dy = currentPoint.y - center.y;
+        var dx = currentPoint.x - center.x;
+        var theta = Math.atan2(dy, dx); // range (-PI, PI]
+
+        theta *= 180 / Math.PI;
+
+        theta -= 90;
+
+        theta = Math.round(theta);
+
+        return theta;
+
+    }
+
+    var currentAngle = 0;
+    var topAngle = 50;
+
+
+    function checkAngle(angle) {
+        if(isNaN(angle))
+            return false;
+
+        if(angle > topAngle || angle < 0)
+           return false;
+
+        return true;
+    }
+
+    var anim = new Konva.Animation(function(frame) {
+
+
+        if(moveToStartFlag) {
+
+            controlGroup.rotation(currentAngle);
+            anim.stop();
+            moveToStartFlag = false;
+
+        }
+
+        controlGroup.rotation(currentAngle);
+
+    }, layer);
+
+    var mousePressed = false;
+
+
+    controlImageLowLeft.on('mousedown.konva', function(){
+        mousePressed = true;
+        anim.start();
+  });
+
+    stage.on('mouseup.konva', function(){
+
+        mousePressed =  false;
+        anim.stop();
+    });
+
+
+    stage.on('mousemove.konva', function(){
+
+       if(mousePressed)
+       {
+           var pos = stage.getPointerPosition();
+           var localPos = {
+               x: pos.x - baseGroup.attrs.x,
+               y: pos.y - baseGroup.attrs.y
+           };
+
+           var angle = calculateAngle(localPos, currentPos);
+
+
+           if(checkAngle(angle)) {
+
+               currentAngle = angle;
+
+               currentPos = localPos;
+
+
+           }
+       }
+    });
+
+    var moveToStartFlag = false;
+
+    function moveToStart() {
+        if(currentAngle == 0 && !moveToStartFlag)
+        {
+            currentAngle = 22;
+            moveToStartFlag = true;
+            anim.start();
+            //currentAngle = 25;
+        }
+    }
+
+
+    function moveToStop() {
+        if(currentAngle != 0 && !moveToStartFlag)
+        {
+            currentAngle = 0;
+            moveToStartFlag = true;
+            anim.start();
+            //currentAngle = 25;
+        }
+    }
+
+    var positionPercentage = 0;
+
+    function setPosition(percentage)
+    {
+        var coef = percentage/100;
+
+        var angle = 22 + (50-22)*coef;
+
+        if(!moveToStartFlag)
+        {
+            currentAngle = angle;
+            anim.start();
+        }
+    }
+
+    function getPosition() {
+        return positionPercentage;
     }
 
     return {
-        start: controlStart,
-        stop: controlStop
-
+        moveToStart: moveToStart,
+        stop: moveToStop,
+        setPotition: setPosition,
+        getPosition: getPosition
       }
   }
 

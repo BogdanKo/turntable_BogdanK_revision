@@ -34,12 +34,7 @@ app.directive("turntable", [ 'loadedImages', function(loadedImages){
           var disc = addDiscLayer(turntableGroup, turntableLayer, images.disk, spSlider);
 
 
-          var spSlider = addSpeedSlider(turntableGroup, turntableLayer, {
 
-                speedButton: images.speedSliderButton,
-                speedBase: images.speedSlider
-
-          }, disc);
 
 
 
@@ -49,33 +44,44 @@ app.directive("turntable", [ 'loadedImages', function(loadedImages){
               off33: images.speed33Off,
               on45: images.speed45On,
               off45: images.speed45Off,
+              changeSpeed: updateSpeed
 
 
           }, disc);
 
-          /*  var blueRed_Button = addBlueRedButton(turntableGroup, turntableLayer,{
 
-                /* blue_Button_On: images.blueButtonOn,
-                 blue_Button_Off: images.blueButtonOff,
-                 red_Button_On: images.redButtonOn,
-                 red_Button_Off: images.redButtonOff,
+            var play = addOnOffLayer(turntableGroup, turntableLayer, {
 
-                 start: function () {
-                     disc.start();
-                 },
-                 stop: function () {
-                     disc.stop();
-                 }
+
+                on: images.playOn,
+                off: images.playOff,
+                start: start,
+                stop: stop,
+                powerOn: powerOn,
+                powerOff: powerOff,
+                blue_Button_On: images.blueButtonOn,
+                blue_Button_Off: images.blueButtonOff,
+                red_Button_On: images.redButtonOn,
+                red_Button_Off: images.redButtonOff,
+
 
 
             });
-*/
+
+             var spSlider = addSpeedSlider(stage, turntableGroup, turntableLayer, {
+
+                speedButton: images.speedSliderButton,
+                speedBase: images.speedSlider,
+                updateSpeed: updateSpeedSlider
+
+            }, disc);
+
             var control = addControlLayer(stage, turntableGroup, turntableLayer, {
 
-              control_high_part: images.control_high_part,
-              control_mid_part: images.control_mid_part,
-              control_smallest_part: images.control_smallest_part,
-              control_low_part_left: images.control_low_part_left,
+                control_high_part: images.control_high_part,
+                control_mid_part: images.control_mid_part,
+                control_smallest_part: images.control_smallest_part,
+                control_low_part_left: images.control_low_part_left,
                 controlSmallPart: images.controlSmallPart,
 
                 start: function () {
@@ -88,38 +94,69 @@ app.directive("turntable", [ 'loadedImages', function(loadedImages){
 
             });
 
-            var play = addOnOffLayer(turntableGroup, turntableLayer, {
+
+            var powered = true;
+            var started = false;
+
+            function powerOn() {
+                power(true);
+            }
 
 
-                on: images.playOn,
-                off: images.playOff,
+            function powerOff() {
+                power(false);
+            }
 
-                start: control.start,
-                stop: control.stop,
+            function power(param) {
+                powered = param;
 
-                blue_Button_On: images.blueButtonOn,
-                blue_Button_Off: images.blueButtonOff,
-                red_Button_On: images.redButtonOn,
-                red_Button_Off: images.redButtonOff,
-
-
-
-            });
-
-            var power = addPowerLayer(turntableGroup, turntableLayer, {
-
-                on: images.powerOn,
-                off: images.powerOff,
-                start: control.start,
-                stop: control.stop
-
-            });
+                if(powered && started)
+                {
+                    start();
+                }
+                else
+                {
+                    stop()
+                }
+            }
 
 
+            function start() {
+                started = true;
+
+                if(powered) {
+                    control.moveToStart();
+                    disc.start();
+                }
+            }
+            
+            function stop() {
+
+                if(powered)
+                    started = false;
+
+                control.stop();
+                disc.stop();
+            }
 
 
 
+            var percentageC = 0;
+            var fixedSpeedC = 45;
+            
+            function updateSpeed(fixedSpeed) {
+                disc.changeSpeed(fixedSpeed + fixedSpeed * percentageC);
 
+                fixedSpeedC = fixedSpeed;
+
+            }
+
+            function updateSpeedSlider(percentage) {
+                disc.changeSpeed(fixedSpeedC + fixedSpeedC * percentage);
+
+                percentageC = percentage;
+
+            }
 
 
           /*  addRedButton(turntableGroup, turntableLayer, {
