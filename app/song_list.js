@@ -1,21 +1,19 @@
-var songList = angular.module('s_list',[]);
-
-
-    .controller('songs_list',['$scope', function ($scope) {
+app.module('songList',[]);
+app.controller('songsList',['$scope', function ($scope) {
 
        $scope.songs = [];
-       sound_cloud.initalize({
+       soundcloud.initalize({
 
         client_id: 'YOUR ID'
 
        });
 
-      sound_Cloud.get('tracks', function(tracks){
+      soundCloud.get('tracks', function(tracks){
 
             var i,
             for (i = 0, i < tracks.length, i++){
 
-              sound_cloud.stream('/tracks/' + tracks[i].id, function (sm_object){
+              soundСloud.stream('/tracks/' + tracks[i].id, function (sm_object){
 
                var track = {
 
@@ -38,6 +36,18 @@ var songList = angular.module('s_list',[]);
       };
 
 ]);
+
+app.service ('songList', function () {
+
+     soundManager.createSound ({
+
+       id: 'song1',
+       url: sm_object.url,
+       autoPlay: false,
+       volume: 50
+});
+
+
 
 /*
 .controller('MainCtrl', ['$scope', function ($scope) {
